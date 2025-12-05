@@ -8,7 +8,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [macos-latest, windows-latest]
+        os: [macos-13, windows-2019]
         config: [debug, release]
 
     steps:
@@ -22,12 +22,16 @@ jobs:
       with:
         length: 7
 
+    - name: Select Xcode 14.3.1
+      if: contains(matrix.os, 'macos')
+      run: sudo xcode-select -s /Applications/Xcode_14.3.1.app
+
     - name: configure_macos
-      if: matrix.os == 'macos-latest'
+      if: contains(matrix.os, 'macos')
       run: mkdir build && cd build && cmake -G Xcode ..
  
     - name: configure_windows
-      if: matrix.os == 'windows-latest'
+      if: matrix.os == 'windows-2019'
       run: mkdir build && cd build && cmake ..
 
     - name: build_debug
@@ -39,7 +43,7 @@ jobs:
       run: cmake --build build --config 'Release'
 
     - name: package_macos
-      if: matrix.os == 'macos-latest'
+      if: contains(matrix.os, 'macos')
       env:
         GITHUB_REPOSITORY: ${{ github.repository }}
         GITHUB_SHA: ${{ github.sha }}
@@ -63,7 +67,7 @@ jobs:
         if [ -d patchers ]; then cp -a patchers $PACKAGE_NAME; fi
 
     - name: package_windows
-      if: matrix.os == 'windows-latest'
+      if: matrix.os == 'windows-2019'
       shell: cmd
       env:
         GITHUB_REPOSITORY_NAME: ${{ github.event.repository.name }}
@@ -94,12 +98,12 @@ jobs:
 
     - uses: actions/download-artifact@v4
       with:
-        name: ${{ github.event.repository.name }}-${{ steps.short-sha.outputs.sha }}-release-windows-latest
+        name: ${{ github.event.repository.name }}-${{ steps.short-sha.outputs.sha }}-release-windows-2019
         path: ${{ github.event.repository.name }}
         
     - uses: actions/download-artifact@v4
       with:
-        name: ${{ github.event.repository.name }}-${{ steps.short-sha.outputs.sha }}-release-macos-latest
+        name: ${{ github.event.repository.name }}-${{ steps.short-sha.outputs.sha }}-release-macos-13
         path: ${{ github.event.repository.name }}
         
     - name: Display structure of downloaded files
